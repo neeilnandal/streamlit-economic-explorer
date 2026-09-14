@@ -1,482 +1,190 @@
-# Streamlit-economic-explorer
-Interactive Streamlit dashboard for exploring World Bank GDP indicators with country filters, regional comparison, top-N rankings, growth metrics, and CSV export.
 # Streamlit Economic Explorer
 
-An interactive **Streamlit economic data dashboard** for exploring country-level GDP trends, GDP per capita, inflation-adjusted GDP, regional comparisons, top-N country rankings, and filtered CSV exports using World Bank data.  The link for the deployment of the app is https://puwomdwa9smu6qspnbxtot.streamlit.app/
+A browser-based Python application for exploring World Bank GDP indicators across countries, regions and time.
 
-This project turns raw economic indicators into a simple browser-based analytics tool. Users can select countries, regions, metrics, and year ranges, then compare economic patterns through charts, KPI cards, ranking tables, and downloadable datasets.
+[Open the live application](https://puwomdwa9smu6qspnbxtot.streamlit.app/) · [View the source code](https://github.com/neeilnandal/streamlit-economic-explorer)
 
-## Overview
-
-Economic data is powerful, but it is often hard to explore quickly. Public datasets usually require cleaning, reshaping, filtering, and charting before they become useful.
-
-This app solves that problem by combining:
-
-* World Bank API integration
-* Pandas data preparation
-* Streamlit interactive controls
-* GDP trend charts
-* GDP per capita comparison
-* Inflation-adjusted GDP comparison
-* Region-level aggregation
-* Top-N rankings
-* Filtered CSV download
-
-The result is a lightweight economic data explorer that works directly in the browser.
-
-## Problem
-
-Country-level economic indicators are usually available through CSV files or public APIs, but they are not always analysis-ready.
-
-A user often needs to:
-
-* Find the right indicator
-* Fetch data from an API
-* Clean missing values
-* Add country metadata
-* Filter countries and regions
-* Compare values across time
-* Calculate growth
-* Export the filtered dataset
-
-The real problem is not “show GDP data.”
-
-The real problem is:
-
-> Make economic trends easy to explore, compare, and export without forcing the user to write analysis code.
-
-## Solution
-
-Streamlit Economic Explorer loads GDP indicators from the World Bank API or a local CSV fallback, enriches them with country metadata, and presents the results in an interactive dashboard.
-
-Users can:
-
-* Select a data source
-* Choose a year range
-* Filter by region
-* Select countries by full country name
-* Compare GDP, GDP per capita, or constant-dollar GDP
-* View region-level trends
-* Generate top-N country rankings
-* Calculate percentage growth
-* Download filtered data as CSV
-
-## Key Features
+## Project snapshot
 
-| Feature                    | Description                                                             |
-| -------------------------- | ----------------------------------------------------------------------- |
-| World Bank API integration | Fetches current GDP, GDP per capita, and constant-dollar GDP indicators |
-| Local CSV fallback         | Supports local GDP datasets stored in `data/gdp_data.csv`               |
-| Full country names         | Displays readable country labels such as `Germany (DEU)`                |
-| GDP per capita             | Compares country-level GDP per person                                   |
-| Inflation-adjusted GDP     | Uses constant 2015 US$ GDP where available                              |
-| Region comparison          | Aggregates selected metric by World Bank region                         |
-| Top-N rankings             | Shows highest-ranked countries for the selected metric and year         |
-| Percentage growth          | Calculates growth between selected start and end years                  |
-| Filtered CSV export        | Lets users download the current filtered dataset                        |
-| Deployment checklist       | Includes Streamlit Community Cloud deployment notes                     |
+| Area | Implementation |
+|---|---|
+| Problem | World Bank indicators require retrieval, cleaning and metadata enrichment before they are convenient to compare |
+| Solution | An interactive Streamlit application with country, region, metric and year filters |
+| Data | World Bank API or a selectable local CSV dataset |
+| Outputs | Time-series charts, KPI cards, regional comparisons, rankings, growth calculations and filtered CSV export |
+| Stack | Python, Streamlit, Pandas and Requests |
+| Scope | Exploratory analysis; no forecasting or causal inference |
 
-## Tech Stack
+## What the application does
 
-| Area              | Technology                         |
-| ----------------- | ---------------------------------- |
-| Language          | Python                             |
-| Web App Framework | Streamlit                          |
-| Data Processing   | Pandas                             |
-| API Client        | Requests                           |
-| Data Source       | World Bank API, local CSV fallback |
-| Visualization     | Streamlit charts and metric cards  |
-| Caching           | `st.cache_data`                    |
-| File Handling     | `pathlib`                          |
+The application retrieves and prepares economic indicators, then lets users:
 
-## Indicators Used
+- Compare countries using readable names and ISO country codes.
+- Filter observations by World Bank region.
+- Select a year range between 1960 and 2024.
+- Explore nominal GDP, GDP per capita or constant-price GDP.
+- Review country-level values and percentage growth.
+- Compare regional totals over time.
+- generate top-N country rankings for a selected year.
+- Inspect and download the active filtered dataset.
 
-The dashboard uses the following World Bank indicators:
+The downloaded CSV is created from the same filtered dataframe used by the main country-level view.
 
-| Indicator                  | World Bank Code  | Meaning                                            |
-| -------------------------- | ---------------- | -------------------------------------------------- |
-| GDP current US$            | `NY.GDP.MKTP.CD` | Nominal GDP in current US dollars                  |
-| GDP per capita current US$ | `NY.GDP.PCAP.CD` | GDP per person in current US dollars               |
-| GDP constant 2015 US$      | `NY.GDP.MKTP.KD` | Inflation-adjusted GDP in constant 2015 US dollars |
+## Indicators
 
-## App Workflow
+| Metric | World Bank code | Unit |
+|---|---|---|
+| GDP | `NY.GDP.MKTP.CD` | Current US dollars |
+| GDP per capita | `NY.GDP.PCAP.CD` | Current US dollars per person |
+| Constant-price GDP | `NY.GDP.MKTP.KD` | Constant 2015 US dollars |
 
-```text
-Select data source
-        |
-Fetch World Bank indicators or load local CSV
-        |
-Fetch country metadata
-        |
-Merge GDP data with country names and regions
-        |
-Select year range, regions, countries, and metric
-        |
-Render GDP trend charts
-        |
-Calculate country growth
-        |
-Generate top-N rankings
-        |
-Allow filtered CSV download
-```
+Constant-price GDP is useful for comparisons across time because it reduces the effect of price-level changes. It should not be interpreted as a causal measure of economic performance.
 
-## Project Structure
+## Data workflow
 
-```text
-streamlit-economic-explorer/
-│
-├── streamlit_app.py
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── data/
-│   └── gdp_data.csv
+1. The user selects World Bank API mode or Local CSV mode.
+2. API mode retrieves paginated indicator records and country metadata.
+3. Local mode reads `data/gdp_data.csv` and reshapes the year columns into long format.
+4. Country records are enriched with names, regions and income classifications when metadata is available.
+5. The application applies the selected region, country, metric and year filters.
+6. The filtered data feeds the charts, KPI cards, rankings and CSV download.
 
-```
+API responses and prepared datasets are cached with `st.cache_data` to avoid repeating unchanged retrieval and transformation work.
 
-The `data/gdp_data.csv` file is optional if using the World Bank API mode. It is required only for local CSV mode.
+## Reliability and data handling
 
-## Installation
+The API client:
 
-Clone the repository:
+- Uses a 20-second request timeout.
+- Calls `raise_for_status()` for unsuccessful HTTP responses.
+- Shows a warning when a request fails.
+- Returns an empty dataframe when the requested data cannot be prepared.
+- Stops the application with a clear message when no usable data is available.
+- Converts year and indicator fields to numeric types.
+- Avoids division by zero in growth calculations.
 
-```bash
-git clone https://github.com/your-username/streamlit-economic-explorer.git
-cd streamlit-economic-explorer
-```
+The application uses public aggregate data. It does not collect credentials, accept file uploads or require an API key.
 
-Create a virtual environment:
+## Local CSV mode
 
-```bash
-python -m venv venv
-```
-
-Activate the environment.
-
-On macOS or Linux:
-
-```bash
-source venv/bin/activate
-```
-
-On Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Requirements
-
-Create a `requirements.txt` file with:
-
-```text
-streamlit
-pandas
-requests
-```
-
-## Run the App
-
-```bash
-streamlit run streamlit_app.py
-```
-
-Then open the local Streamlit URL shown in the terminal.
-
-Usually:
-
-```text
-http://localhost:8501
-```
-
-## Dashboard Controls
-
-The sidebar provides the main dashboard controls.
-
-| Control            | Purpose                                     |
-| ------------------ | ------------------------------------------- |
-| Data source        | Choose World Bank API or local CSV          |
-| Year range         | Select the analysis period                  |
-| Region filter      | Limit analysis to selected regions          |
-| Country selector   | Select countries using full country names   |
-| Primary metric     | Choose GDP, GDP per capita, or constant GDP |
-| Top-N ranking size | Select ranking table size                   |
-
-## Dashboard Sections
-
-### 1. KPI Summary
-
-The app displays:
-
-* Number of selected countries
-* Number of selected regions
-* Selected year range
-* Latest available year
-
-### 2. GDP Over Time
-
-A time-series chart compares the selected metric across selected countries.
-
-Useful for questions such as:
-
-* How has Germany’s GDP changed over time?
-* How does Japan compare with Brazil?
-* Which selected country shows stronger long-term growth?
-
-### 3. Filtered Dataset
-
-The app shows the filtered dataframe and provides a CSV download button.
-
-This is useful when a user wants to export the selected data for further analysis.
-
-### 4. Country Snapshot
-
-The dashboard displays country-level metric cards for the final selected year.
-
-Each card shows:
-
-* Selected country
-* Final-year value
-* Percentage growth from start year to end year
-
-### 5. GDP Per Capita Comparison
-
-This section compares GDP per capita across selected countries.
-
-It helps separate total economic size from average economic output per person.
-
-### 6. Inflation-Adjusted GDP Comparison
-
-This section uses constant 2015 US$ GDP where available.
-
-This gives a cleaner long-term comparison because it reduces the distortion caused by price-level changes over time.
-
-### 7. Region-Level Comparison
-
-The app aggregates the selected metric by World Bank region.
-
-This helps users compare broader economic patterns across regions instead of only individual countries.
-
-### 8. Top-N Rankings
-
-The dashboard ranks countries by the selected metric for the selected final year.
-
-Examples:
-
-* Top 10 countries by GDP
-* Top 10 countries by GDP per capita
-* Top 15 countries by constant-dollar GDP
-
-### 9. Percentage Growth Table
-
-The app calculates growth between the selected start and end years.
-
-Formula:
-
-```text
-Percentage growth = ((end value / start value) - 1) × 100
-```
-
-## Data Transformation
-
-The app supports two data paths.
-
-### World Bank API Mode
-
-In API mode, the app fetches indicator data directly from the World Bank API and joins it with country metadata.
-
-The country metadata adds:
-
-* Country code
-* Country name
-* Region
-* Income level
-
-This makes the dashboard easier to read and enables region-level aggregation.
-
-### Local CSV Mode
-
-In local CSV mode, the app expects a file at:
+Local mode expects:
 
 ```text
 data/gdp_data.csv
 ```
 
-Expected structure:
+The file must contain a `Country Code` column and year columns such as:
 
 ```text
-Country Code | 1960 | 1961 | 1962 | ... | 2022
+Country Code,1960,1961,1962,...,2022
+DEU,...
+FRA,...
 ```
 
-The app reshapes the file into long format:
+The application reshapes these year columns into:
 
 ```text
 Country Code | Year | GDP current US$
 ```
 
-This is done with `pandas.melt()`.
+Local mode supports nominal GDP. GDP per capita and constant-price GDP remain unavailable unless compatible fields and loading logic are added.
 
-```python
-gdp_df = raw_gdp_df.melt(
-    id_vars=id_columns,
-    value_vars=year_columns,
-    var_name="Year",
-    value_name="GDP current US$",
-)
-```
-
-## First-Principles Design
-
-The project was designed around one core question:
-
-> What is the simplest useful way to explore economic trends without writing code?
-
-A spreadsheet is easy to start with, but weak for interactive filtering and repeatable analysis.
-
-A full BI tool is powerful, but too heavy for a lightweight GitHub portfolio project.
-
-A Streamlit app is the right middle ground. It is interactive, Python-native, easy to deploy, and close to the data workflow used by analysts and data scientists.
-
-## OODA Summary
-
-### Observe
-
-Economic data is available, but raw CSV/API formats are not friendly for fast comparison.
-
-### Orient
-
-The task is exploratory analysis, not forecasting. Users need filters, charts, rankings, and exports.
-
-### Decide
-
-Use Streamlit for the interface, Pandas for transformation, and the World Bank API for live data access.
-
-### Act
-
-Build a dashboard that fetches indicators, enriches country metadata, filters by user selections, visualizes trends, calculates growth, and exports filtered data.
-
-## Founder-Style Product Diagnosis
-
-### User
-
-Students, analysts, data scientists, policy learners, and portfolio reviewers who want to explore GDP trends quickly.
-
-### Pain Point
-
-Economic datasets are available but not immediately usable. Users need a fast way to compare countries, regions, and growth patterns.
-
-### Smallest Useful Version
-
-A dashboard that loads GDP data, allows country and year filtering, and plots GDP over time.
-
-## Security and Data Notes
-
-This app is low-risk because it uses public economic data and does not require user authentication, secrets, or private files.
-
-| Area                    | Status                               |
-| ----------------------- | ------------------------------------ |
-| API keys                | Not required                         |
-| Secrets                 | None used                            |
-| User authentication     | Not required for demo                |
-| File uploads            | Not enabled                          |
-| User credentials        | None collected                       |
-| Dynamic code execution  | None                                 |
-| Data privacy risk       | Low if using public data             |
-| External API dependency | World Bank API availability required |
-
-Recommended safeguards:
-
-* Do not commit private datasets
-* Keep `.streamlit/secrets.toml` out of version control
-* Add API error handling for production use
-* Validate local CSV schema before loading
-* Add clear source attribution
-* Avoid storing user-specific data in the app
-
-## Data Analysis Notes
-
-This project demonstrates a practical exploratory data analysis workflow:
-
-1. Fetch or load structured data
-2. Clean and normalize fields
-3. Add metadata
-4. Filter by analytical dimensions
-5. Visualize time-series patterns
-6. Calculate growth
-7. Export filtered results
-
-The main analytical value comes from comparing three views:
-
-| View                  | Insight                                 |
-| --------------------- | --------------------------------------- |
-| GDP current US$       | Total economic size in nominal terms    |
-| GDP per capita        | Average economic output per person      |
-| GDP constant 2015 US$ | Long-term growth adjusted for inflation |
-
-These views help avoid a common mistake: comparing only headline GDP without considering population size or inflation.
-
-
-## Streamlit Community Cloud Deployment
-
-To deploy:
-
-1. Push the repository to GitHub.
-2. Confirm `streamlit_app.py` is in the repository root.
-3. Add `requirements.txt`.
-4. Go to Streamlit Community Cloud.
-5. Select the GitHub repository.
-6. Choose `streamlit_app.py` as the app file.
-7. Deploy.
-
-Recommended `requirements.txt`:
+## Repository structure
 
 ```text
-streamlit
-pandas
-requests
+streamlit-economic-explorer/
+├── data/
+│   └── gdp_data.csv
+├── .gitignore
+├── LICENSE
+├── README.md
+├── requirements.txt
+└── streamlit_app.py
 ```
 
-## Suggested `.gitignore`
+`streamlit_app.py` is the application entry point and is intentionally kept in the repository root for Streamlit Community Cloud deployment.
+
+## Run locally
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/neeilnandal/streamlit-economic-explorer.git
+cd streamlit-economic-explorer
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Activate it on macOS or Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+Activate it in Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Activate it in Windows Command Prompt:
+
+```bat
+.venv\Scripts\activate.bat
+```
+
+### 3. Install the dependencies
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 4. Start the application
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Streamlit will display the local address in the terminal, normally:
 
 ```text
-__pycache__/
-*.pyc
-.env
-.venv/
-venv/
-.streamlit/secrets.toml
+http://localhost:8501
 ```
 
-## Example Questions This App Can Answer
+## Analytical limitations
 
-* Which selected country had the highest GDP in the final selected year?
-* How has GDP changed across selected countries since 1960?
-* Which regions show the strongest GDP trend?
-* How does GDP per capita compare across countries?
-* How different is nominal GDP from inflation-adjusted GDP?
-* Which countries rank highest by GDP or GDP per capita?
-* What is the percentage growth between two selected years?
+- World Bank observations may be missing or revised.
+- Percentage growth requires valid observations for both selected boundary years and a non-zero starting value.
+- Regional charts sum the available country observations in each World Bank region; they are not official precomputed regional aggregates.
+- Current-dollar GDP is affected by inflation and exchange-rate movements.
+- GDP per capita does not measure income distribution or wellbeing.
+- The application supports exploration, not forecasting, policy evaluation or causal inference.
+- The repository does not currently include automated tests or continuous integration.
 
-## Repository Topics
+## Next engineering steps
 
-```text
-streamlit
-python
-pandas
-requests
-world-bank-api
-gdp
-gdp-per-capita
-economic-data
-data-visualization
-dashboard
-open-data
-time-series
-```
+The most useful improvements would be:
+
+- Add unit tests for reshaping, filtering and growth calculations.
+- Add contract tests for World Bank API response handling.
+- Validate the local CSV schema with explicit error messages.
+- Separate retrieval, transformation and presentation logic into smaller modules.
+- Pin dependency versions for repeatable deployments.
+- Add retry and backoff behaviour for temporary API failures.
+
+These are planned improvements, not current capabilities.
+
+## Data source
+
+Indicator values and country metadata are provided by the [World Bank API](https://datahelpdesk.worldbank.org/knowledgebase/articles/889392).
+
+Users should consult the World Bank’s indicator definitions and revision notes before using exported data in formal analysis.
+
+## License
+
+This project is released under the [Apache License 2.0](LICENSE).
